@@ -6,7 +6,7 @@ LibDisplayInit* LibDisplayInit::_singleton= nullptr;;
 
 LibDisplayInit::LibDisplayInit()
 {
-	printf("LibDisplayInit start");
+	printf("LibDisplayInit start\n");
 
 	this->_func_handle = 0;
 
@@ -34,12 +34,12 @@ LibDisplayInit::LibDisplayInit()
 		exit(EXIT_FAILURE);
 	}
 
-	printf("LibDisplayInit successful");
+	printf("LibDisplayInit successful\n");
 }
 
 LibDisplayInit::~LibDisplayInit()
 {
-	printf("~LibDisplayInit start");
+	printf("~LibDisplayInit start\n");
 
 	if(this->_func_handle)
 	{
@@ -49,7 +49,7 @@ LibDisplayInit::~LibDisplayInit()
 		}
 	}
 
-	printf("~LibDisplayInit successful");
+	printf("~LibDisplayInit successful\n");
 }
 
 LibDisplayInit* LibDisplayInit::GetInstance()
