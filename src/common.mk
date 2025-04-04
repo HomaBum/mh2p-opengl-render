@@ -19,6 +19,9 @@ LDFLAGS+=-lang-c++
 
 VFLAG_g=-gstabs+
 
+#===== NAME - name of the project (default - name of project directory).
+NAME=mh2p-opengl-render
+
 include $(MKFILES_ROOT)/qmacros.mk
 ifndef QNX_INTERNAL
 QNX_INTERNAL=$(PROJECT_ROOT)/.qnx_internal.mk
