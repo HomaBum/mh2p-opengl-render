@@ -122,7 +122,13 @@ int main(int argc, char* argv[]) {
 	Init();
 
 	//test
-	execute_initial_commands();
+
+	while(true) {
+        glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(programObjectTextRender);
+        print_string(-333, 160, "Q3 F3 Team OpenGL", 0.5, 0.5, 0.5, 150);
+        eglSwapBuffers(eglDisplay, eglSurface);
+	}
 
 	while (true) {
 		printf("Main loop executed \n");
