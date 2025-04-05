@@ -43,7 +43,6 @@
 GLuint programObject;
 GLuint programObjectTextRender;
 EGLDisplay eglDisplay;
-EGLConfig eglConfig;
 EGLSurface eglSurface;
 EGLContext eglContext;
 
@@ -113,8 +112,8 @@ const char CLIENT_INIT[] = { 1 };
 const char ZLIB_ENCODING[] = { 2, 0, 0, 2, 0, 0, 0, 6, 0, 0, 0, 0 };
 
 // SETUP SECTION
-int windowWidth = 800;
-int windowHeight = 480;
+int windowWidth = 1920;
+int windowHeight = 722;
 
 const char* VNC_SERVER_IP_ADDRESS = "10.173.189.62";
 const int VNC_SERVER_PORT = 5900;

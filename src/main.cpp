@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
     printf("windowWidth = %d;\n", windowWidth);
     printf("windowHeight = %d;\n", windowHeight);
 
+    // Init Screen
     LibDisplayInit* libDisplayInit = LibDisplayInit::GetInstance();
     LibDisplayInit::dint_screen_window* dint_window = 0;
     screen_window_t native_window = 0;
@@ -47,8 +48,9 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	printf("dint_get_native_window result = %d, native_window = %p\n", result, native_window);
+	// Init Screen Done
 
-	// OpenGLES
+	// Init EGL
 	printf("OpenGL ES2.0 initialization started \n");
 	eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY); // DONE
 	if(eglDisplay == EGL_NO_DISPLAY) {
@@ -63,34 +65,42 @@ int main(int argc, char* argv[]) {
 	}
 	printf("eglInitialize: Version %d.%d\n", major, minor);
 
-	//const GLubyte* glVersion = glGetString(GL_VERSION);
-	//printf("OpenGL version: %s\n", glVersion);
-
-	//GLint maxSize = 0;
-	//glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
-	//printf("Maximum OpenGL texture size supported: %d\n", maxSize);
-
-	// Specify EGL configurations
 	EGLint config_attribs[] = { EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_RED_SIZE,
-			1, EGL_GREEN_SIZE, 1, EGL_BLUE_SIZE, 1, EGL_ALPHA_SIZE, 1,
-			EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL_NONE };
-
-	EGLConfig* configs = new EGLConfig[5];
+				1, EGL_GREEN_SIZE, 1, EGL_BLUE_SIZE, 1, EGL_ALPHA_SIZE, 1,
+				EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL_NONE };
 	EGLint num_configs;
-	EGLNativeWindowType windowEgl = native_window;
-	if (!eglChooseConfig(eglDisplay, config_attribs, configs, 1, &num_configs)) { // DONE
-		fprintf(stderr, "Error: Failed to choose EGL configuration\n");
-		return 1; // Exit with error
-	}
-	eglConfig = configs[0];
+	eglChooseConfig(eglDisplay, config_attribs, 0, 0, &num_configs);
+	printf("eglChooseConfig: num_configs = %d\n", num_configs);
 
-	printf("OpenGLES: eglCreateWindowSurface \n");
-	eglSurface = eglCreateWindowSurface(eglDisplay, configs[0], windowEgl, 0);
-	if (eglSurface == EGL_NO_SURFACE) {
-		checkErrorEGL("eglCreateWindowSurface");
-		fprintf(stderr, "Create surface failed: 0x%x\n", eglSurface);
+	if(num_configs < 1) {
+		printf("Error: no configs!!!\n");
 		exit(EXIT_FAILURE);
 	}
+
+	EGLConfig* configs = new EGLConfig[num_configs];
+	eglChooseConfig(eglDisplay, config_attribs, configs, num_configs, &num_configs);
+	printf("eglChooseConfig: configs = %p, num_configs = %d\n", configs, num_configs);
+
+	EGLSurface eglSurface = EGL_NO_SURFACE;
+	EGLConfig eglConfig = 0;
+	for(int i = 0; i < num_configs; ++i) {
+		printf("OpenGLES: eglCreateWindowSurface with %d config \n", i);
+		EGLNativeWindowType windowEgl = native_window;
+		eglSurface = eglCreateWindowSurface(eglDisplay, configs[i], windowEgl, 0);
+		if(eglSurface) {
+			eglConfig = configs[i];
+			break;
+		}
+		checkErrorEGL("eglCreateWindowSurface");
+		printf("Create surface failed: 0x%x\n", eglSurface);
+	}
+
+	if(eglSurface == EGL_NO_SURFACE) {
+		printf("Error: no eglSurface!!!\n");
+		exit(EXIT_FAILURE);
+	}
+
+
 	printf("OpenGLES: eglBindAPI \n");
 	if(eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE) {
 		printf("Error eglBindAPI!!!\n");
@@ -98,9 +108,9 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	const EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
+	const EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	printf("OpenGLES: eglCreateContext \n");
-	eglContext = eglCreateContext(eglDisplay, configs[0], EGL_NO_CONTEXT, context_attribs);
+	eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, context_attribs);
 	checkErrorEGL("eglCreateContext");
 	if (eglContext == EGL_NO_CONTEXT) {
 		std::cerr << "Failed to create EGL context" << std::endl;
