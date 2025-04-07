@@ -30,10 +30,7 @@ int main(int argc, char* argv[]) {
 
 	// Call dint_create_window()
 	int display_id = 0;
-	int properties[3];
-	properties[0] = 5;
-	properties[1] = 1;
-	properties[2]= 0;
+	int properties[] = {5, 1, 0};
 	result = libDisplayInit->dint_create_window(0, display_id, windowWidth, windowHeight, properties, &dint_window);
 	if(result) {
 		printf("Failed to create window %d!!!\n", result);
