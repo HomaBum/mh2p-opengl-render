@@ -1,5 +1,6 @@
 #include "opengl.hh"
 #include "libdisplayinit.h"
+#include <screen/screen.h>
 
 int main(int argc, char* argv[]) {
 
@@ -45,6 +46,13 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	printf("dint_get_native_window result = %d, native_window = %p\n", result, native_window);
+
+	// window debug
+	int buffer_size[2] = {0};
+	screen_get_window_property_iv(native_window, SCREEN_PROPERTY_BUFFER_SIZE, buffer_size);
+	printf("Native window buffer size: %dx%d\n", buffer_size[0], buffer_size[1]);
+	// window debug
+
 	// Init Screen Done
 
 	// Init EGL
@@ -62,9 +70,25 @@ int main(int argc, char* argv[]) {
 	}
 	printf("eglInitialize: Version %d.%d\n", major, minor);
 
+	/*
 	EGLint config_attribs[] = { EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_RED_SIZE,
 				1, EGL_GREEN_SIZE, 1, EGL_BLUE_SIZE, 1, EGL_ALPHA_SIZE, 1,
 				EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL_NONE };
+	*/
+	EGLint config_attribs[] = {
+	    EGL_RED_SIZE, 8,
+	    EGL_GREEN_SIZE, 8,
+	    EGL_BLUE_SIZE, 8,
+	    EGL_ALPHA_SIZE, 8,
+	    EGL_BUFFER_SIZE, 32,
+	    EGL_DEPTH_SIZE, 24,
+	    EGL_STENCIL_SIZE, 8,
+	    EGL_SAMPLE_BUFFERS, 0, // 1
+	    EGL_SAMPLES, 0, // 4
+	    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+	    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+	    EGL_NONE
+	};
 	EGLint num_configs;
 	eglChooseConfig(eglDisplay, config_attribs, 0, 0, &num_configs);
 	printf("eglChooseConfig: num_configs = %d\n", num_configs);
@@ -82,6 +106,29 @@ int main(int argc, char* argv[]) {
 	EGLConfig eglConfig = 0;
 	for(int i = 0; i < num_configs; ++i) {
 		printf("OpenGLES: eglCreateWindowSurface with %d config \n", i);
+
+		// config debug
+	    EGLint val;
+	    printf("Config #%d:\n", i);
+	    eglGetConfigAttrib(eglDisplay, configs[i], EGL_SURFACE_TYPE, &val);
+	    printf("  EGL_SURFACE_TYPE = 0x%x\n", val);
+	    eglGetConfigAttrib(eglDisplay, configs[i], EGL_RENDERABLE_TYPE, &val);
+	    printf("  EGL_RENDERABLE_TYPE = 0x%x\n", val);
+	    eglGetConfigAttrib(eglDisplay, configs[i], EGL_RED_SIZE, &val);
+	    printf("  EGL_RED_SIZE = %d\n", val);
+	    eglGetConfigAttrib(eglDisplay, configs[i], EGL_GREEN_SIZE, &val);
+	    printf("  EGL_GREEN_SIZE = %d\n", val);
+	    eglGetConfigAttrib(eglDisplay, configs[i], EGL_BLUE_SIZE, &val);
+	    printf("  EGL_BLUE_SIZE = %d\n", val);
+
+	    EGLint surfaceType = 0;
+	    eglGetConfigAttrib(eglDisplay, configs[i], EGL_SURFACE_TYPE, &surfaceType);
+	    if (!(surfaceType & EGL_WINDOW_BIT)) {
+	        printf("Config %d does not support EGL_WINDOW_BIT\n", i);
+	        continue;
+	    }
+		// config debug
+
 		EGLNativeWindowType windowEgl = native_window;
 		eglSurface = eglCreateWindowSurface(eglDisplay, configs[i], windowEgl, 0);
 		if(eglSurface) {
