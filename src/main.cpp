@@ -1,6 +1,5 @@
 #include "opengl.hh"
 #include "libdisplayinit.h"
-#include <screen/screen.h>
 
 int main(int argc, char* argv[]) {
 
@@ -46,13 +45,6 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	printf("dint_get_native_window result = %d, native_window = %p\n", result, native_window);
-
-	// window debug
-	int buffer_size[2] = {0};
-	screen_get_window_property_iv(native_window, SCREEN_PROPERTY_BUFFER_SIZE, buffer_size);
-	printf("Native window buffer size: %dx%d\n", buffer_size[0], buffer_size[1]);
-	// window debug
-
 	// Init Screen Done
 
 	// Init EGL
@@ -69,6 +61,13 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	printf("eglInitialize: Version %d.%d\n", major, minor);
+
+	printf("OpenGLES: eglBindAPI \n");
+	if(eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE) {
+		printf("Error eglBindAPI!!!\n");
+		checkErrorEGL("eglBindAPI");
+		exit(EXIT_FAILURE);
+	}
 
 	/*
 	EGLint config_attribs[] = { EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_RED_SIZE,
@@ -141,14 +140,6 @@ int main(int argc, char* argv[]) {
 
 	if(eglSurface == EGL_NO_SURFACE) {
 		printf("Error: no eglSurface!!!\n");
-		exit(EXIT_FAILURE);
-	}
-
-
-	printf("OpenGLES: eglBindAPI \n");
-	if(eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE) {
-		printf("Error eglBindAPI!!!\n");
-		checkErrorEGL("eglBindAPI");
 		exit(EXIT_FAILURE);
 	}
 
