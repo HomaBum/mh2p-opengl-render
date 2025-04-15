@@ -10,7 +10,7 @@ LibDisplayInit::LibDisplayInit()
 
 	this->_func_handle = 0;
 
-	this->_func_handle = dlopen(DINT_LIB_NAME, RTLD_LAZY);
+	this->_func_handle = dlopen(DINT_LIB_NAME, RTLD_NOW);
 	if (!this->_func_handle) {
 		printf("Error using %s: %s\n", DINT_LIB_NAME, dlerror());
 		exit(EXIT_FAILURE);

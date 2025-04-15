@@ -35,6 +35,12 @@
 #include <sys/param.h>
 #include <netinet/tcp_var.h>
 
+#include "libegl.h"
+#include "libgl2.h"
+
+LibEgl* libEgl = LibEgl::GetInstance();
+LibGl2* libGl2 = LibGl2::GetInstance();
+
 #ifndef TCP_USER_TIMEOUT
 #define TCP_USER_TIMEOUT 18  // how long for loss retry before timeout [ms]
 #endif
@@ -140,7 +146,7 @@ static EGLenum checkErrorEGL(const char* msg) {
 					"EGL one or more argument values are invalid",
 					"EGLSurface argument does not name a valid surface configured for rendering",
 					"EGL power management event has occurred", };
-	EGLenum error = eglGetError();
+	EGLenum error = libEgl->eglGetError();
 	fprintf(stderr, "%s: %s\n", msg, errmsg[error - EGL_SUCCESS]);
 	return error;
 }
@@ -208,93 +214,93 @@ int32_t byteArrayToInt32(const char* byteArray) {
 // Initialize OpenGL ES
 void Init() {
 	// Load and compile VNC shaders
-	GLuint vertexShaderVncRender = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShaderVncRender, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShaderVncRender);
+	GLuint vertexShaderVncRender = libGl2->glCreateShader(GL_VERTEX_SHADER);
+	libGl2->glShaderSource(vertexShaderVncRender, 1, &vertexShaderSource, NULL);
+	libGl2->glCompileShader(vertexShaderVncRender);
 
 	// Check for compile errors
 	GLint vertexShaderCompileStatus;
-	glGetShaderiv(vertexShaderVncRender, GL_COMPILE_STATUS,
+	libGl2->glGetShaderiv(vertexShaderVncRender, GL_COMPILE_STATUS,
 			&vertexShaderCompileStatus);
 	if (vertexShaderCompileStatus != GL_TRUE) {
 		char infoLog[512];
-		glGetShaderInfoLog(vertexShaderVncRender, 512, NULL, infoLog);
+		libGl2->glGetShaderInfoLog(vertexShaderVncRender, 512, NULL, infoLog);
 		printf("Vertex shader compilation failed: %s\n", infoLog);
 	}
 
-	GLuint fragmentShaderVncRender = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShaderVncRender, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShaderVncRender);
+	GLuint fragmentShaderVncRender = libGl2->glCreateShader(GL_FRAGMENT_SHADER);
+	libGl2->glShaderSource(fragmentShaderVncRender, 1, &fragmentShaderSource, NULL);
+	libGl2->glCompileShader(fragmentShaderVncRender);
 
 	// Check for compile errors
 	GLint fragmentShaderCompileStatus;
-	glGetShaderiv(fragmentShaderVncRender, GL_COMPILE_STATUS,
+	libGl2->glGetShaderiv(fragmentShaderVncRender, GL_COMPILE_STATUS,
 			&fragmentShaderCompileStatus);
 	if (fragmentShaderCompileStatus != GL_TRUE) {
 		char infoLog[512];
-		glGetShaderInfoLog(fragmentShaderVncRender, 512, NULL, infoLog);
+		libGl2->glGetShaderInfoLog(fragmentShaderVncRender, 512, NULL, infoLog);
 		printf("Fragment shader compilation failed: %s\n", infoLog);
 	}
 
 	// Load and compile Text Render shaders
-	GLuint vertexShaderTextRender = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShaderTextRender, 1, &vertexShaderSourceText, NULL);
-	glCompileShader(vertexShaderTextRender);
+	GLuint vertexShaderTextRender = libGl2->glCreateShader(GL_VERTEX_SHADER);
+	libGl2->glShaderSource(vertexShaderTextRender, 1, &vertexShaderSourceText, NULL);
+	libGl2->glCompileShader(vertexShaderTextRender);
 
 	// Check for compile errors
 	GLint vertexShaderTextRenderCompileStatus;
-	glGetShaderiv(vertexShaderTextRender, GL_COMPILE_STATUS,
+	libGl2->glGetShaderiv(vertexShaderTextRender, GL_COMPILE_STATUS,
 			&vertexShaderTextRenderCompileStatus);
 	if (vertexShaderTextRenderCompileStatus != GL_TRUE) {
 		char infoLog[512];
-		glGetShaderInfoLog(vertexShaderTextRender, 512, NULL, infoLog);
+		libGl2->glGetShaderInfoLog(vertexShaderTextRender, 512, NULL, infoLog);
 		printf("Vertex shader compilation failed: %s\n", infoLog);
 	}
 
-	GLuint fragmentShaderTextRender = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShaderTextRender, 1, &fragmentShaderSourceText, NULL);
-	glCompileShader(fragmentShaderTextRender);
+	GLuint fragmentShaderTextRender = libGl2->glCreateShader(GL_FRAGMENT_SHADER);
+	libGl2->glShaderSource(fragmentShaderTextRender, 1, &fragmentShaderSourceText, NULL);
+	libGl2->glCompileShader(fragmentShaderTextRender);
 
 	// Check for compile errors
 	GLint fragmentShaderCompileStatusTextRender;
-	glGetShaderiv(fragmentShaderTextRender, GL_COMPILE_STATUS,
+	libGl2->glGetShaderiv(fragmentShaderTextRender, GL_COMPILE_STATUS,
 			&fragmentShaderCompileStatusTextRender);
 	if (fragmentShaderCompileStatus != GL_TRUE) {
 		char infoLog[512];
-		glGetShaderInfoLog(fragmentShaderTextRender, 512, NULL, infoLog);
+		libGl2->glGetShaderInfoLog(fragmentShaderTextRender, 512, NULL, infoLog);
 		printf("Fragment shader compilation failed: %s\n", infoLog);
 	}
 
 	// Create program object
-	programObject = glCreateProgram();
+	programObject = libGl2->glCreateProgram();
 
-	glAttachShader(programObject, vertexShaderVncRender);
-	glAttachShader(programObject, fragmentShaderVncRender);
-	glLinkProgram(programObject);
+	libGl2->glAttachShader(programObject, vertexShaderVncRender);
+	libGl2->glAttachShader(programObject, fragmentShaderVncRender);
+	libGl2->glLinkProgram(programObject);
 
-	programObjectTextRender = glCreateProgram();
-	glAttachShader(programObjectTextRender, vertexShaderTextRender);
-	glAttachShader(programObjectTextRender, fragmentShaderTextRender);
-	glLinkProgram(programObjectTextRender);
+	programObjectTextRender = libGl2->glCreateProgram();
+	libGl2->glAttachShader(programObjectTextRender, vertexShaderTextRender);
+	libGl2->glAttachShader(programObjectTextRender, fragmentShaderTextRender);
+	libGl2->glLinkProgram(programObjectTextRender);
 
 	// Check for linking errors
 	GLint programLinkStatus;
-	glGetProgramiv(programObject, GL_LINK_STATUS, &programLinkStatus);
+	libGl2->glGetProgramiv(programObject, GL_LINK_STATUS, &programLinkStatus);
 	if (programLinkStatus != GL_TRUE) {
 		char infoLog[512];
-		glGetProgramInfoLog(programObject, 512, NULL, infoLog);
+		libGl2->glGetProgramInfoLog(programObject, 512, NULL, infoLog);
 		printf("Program linking failed: %s\n", infoLog);
 	}
 
-	glGetProgramiv(programObjectTextRender, GL_LINK_STATUS, &programLinkStatus);
+	libGl2->glGetProgramiv(programObjectTextRender, GL_LINK_STATUS, &programLinkStatus);
 	if (programLinkStatus != GL_TRUE) {
 		char infoLog[512];
-		glGetProgramInfoLog(programObjectTextRender, 512, NULL, infoLog);
+		libGl2->glGetProgramInfoLog(programObjectTextRender, 512, NULL, infoLog);
 		printf("Program linking failed: %s\n", infoLog);
 	}
 
 	// Set clear color to black
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	libGl2->glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 }
 
@@ -504,23 +510,23 @@ void print_string(float x, float y, const char* text, float r, float g,
 
 	}
 
-	glUseProgram(programObjectTextRender);
+	libGl2->glUseProgram(programObjectTextRender);
 	GLuint vbo;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleBuffer), triangleBuffer,
+	libGl2->glGenBuffers(1, &vbo);
+	libGl2->glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	libGl2->glBufferData(GL_ARRAY_BUFFER, sizeof(triangleBuffer), triangleBuffer,
 			GL_STATIC_DRAW);
 
 	// Specify the layout of the vertex data
-	GLint positionAttribute = glGetAttribLocation(programObject, "position");
-	glEnableVertexAttribArray(positionAttribute);
-	glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	GLint positionAttribute = libGl2->glGetAttribLocation(programObject, "position");
+	libGl2->glEnableVertexAttribArray(positionAttribute);
+	libGl2->glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 	// glEnableVertexAttribArray(0);
 
 	// Render the triangle
-	glDrawArrays(GL_TRIANGLES, 0, triangleIndex);
+	libGl2->glDrawArrays(GL_TRIANGLES, 0, triangleIndex);
 
-	glDeleteBuffers(1, &vbo);
+	libGl2->glDeleteBuffers(1, &vbo);
 }
 
 void print_string_center(float y, const char* text, float r, float g, float b,

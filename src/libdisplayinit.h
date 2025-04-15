@@ -1,3 +1,6 @@
+#ifndef LIBDISPLAYINIT_H
+#define LIBDISPLAYINIT_H
+
 #include <screen/screen.h>
 
 #define DINT_LIB_NAME "libdisplayinit.so"
@@ -34,3 +37,5 @@ class LibDisplayInit {
 		dint_get_native_window_handle dint_get_native_window;
 
 };
+
+#endif

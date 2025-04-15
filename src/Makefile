@@ -1,6 +1,7 @@
 LIST=CPU
-LIBS+=egl
-LIBS+=glesv2
+#LDFLAGS+=-Wl,--allow-shlib-undefined
+#LIBS+=egl
+#LIBS+=glesv2
 #LIBS+=gf
 LIBS+=m
 LIBS+=socket
