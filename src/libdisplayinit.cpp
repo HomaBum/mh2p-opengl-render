@@ -4,6 +4,13 @@
 
 LibDisplayInit* LibDisplayInit::_singleton= nullptr;;
 
+#define LOAD_DINT_FUNC(func) \
+    this->func = (func##_handle)dlsym(this->_func_handle, #func); \
+    if (!this->func) { \
+        printf("Error while loading %s function %s: %s\n", DINT_LIB_NAME, #func, dlerror()); \
+        exit(EXIT_FAILURE); \
+    }
+
 LibDisplayInit::LibDisplayInit()
 {
 	printf("LibDisplayInit start\n");
@@ -16,23 +23,11 @@ LibDisplayInit::LibDisplayInit()
 		exit(EXIT_FAILURE);
 	}
 
-	this->dint_init = (dint_init_handle)dlsym(this->_func_handle, "dint_init");
-	if (!this->dint_init) {
-		printf("Error while loading %s function dint_init: %s\n", DINT_LIB_NAME, dlerror());
-		exit(EXIT_FAILURE);
-	}
-
-	this->dint_create_window = (dint_create_window_handle)dlsym(this->_func_handle, "dint_create_window");
-	if (!this->dint_create_window) {
-		printf("Error while loading %s function dint_create_window: %s\n", DINT_LIB_NAME, dlerror());
-		exit(EXIT_FAILURE);
-	}
-
-	this->dint_get_native_window = (dint_get_native_window_handle)dlsym(this->_func_handle, "dint_get_native_window");
-	if (!this->dint_get_native_window) {
-		printf("Error while loading %s function dint_get_native_window: %s\n", DINT_LIB_NAME, dlerror());
-		exit(EXIT_FAILURE);
-	}
+	LOAD_DINT_FUNC(dint_init)
+	LOAD_DINT_FUNC(dint_create_window)
+	LOAD_DINT_FUNC(dint_get_native_window)
+	LOAD_DINT_FUNC(dint_deinit)
+	LOAD_DINT_FUNC(dint_destroy_window)
 
 	printf("LibDisplayInit successful\n");
 }

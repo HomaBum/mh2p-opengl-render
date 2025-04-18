@@ -20,6 +20,8 @@ class LibDisplayInit {
 		typedef int (*dint_init_handle)();
 		typedef int (*dint_create_window_handle)(int isOverlayWithVideo, int display_id, int width, int height, int *properties, dint_screen_window **window);
 		typedef int (*dint_get_native_window_handle)(dint_screen_window *window, screen_window_t *native_window_arg);
+		typedef int (*dint_deinit_handle)();
+		typedef int (*dint_destroy_window_handle)(dint_screen_window *window);
 
 	protected:
 		static LibDisplayInit* _singleton;
@@ -35,6 +37,8 @@ class LibDisplayInit {
 		dint_init_handle dint_init;
 		dint_create_window_handle dint_create_window;
 		dint_get_native_window_handle dint_get_native_window;
+		dint_deinit_handle dint_deinit;
+		dint_destroy_window_handle dint_destroy_window;
 
 };
 

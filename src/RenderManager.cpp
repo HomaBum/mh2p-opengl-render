@@ -3,6 +3,7 @@
 #include "libegl.h"
 #include "libgl2.h"
 #include "stb_easyfont.hh"
+#include "wstring_to_utf8.hh"
 
 RenderManager::RenderManager(int ctx, int w, int h)
 	: context(ctx), width(w), height(h)
@@ -23,6 +24,9 @@ RenderManager::RenderManager(int ctx, int w, int h)
 
 RenderManager::~RenderManager()
 {
+	printf("RenderManager::~RenderManager()\n");
+
+	LibDisplayInit* libDisplayInit = LibDisplayInit::GetInstance();
     LibEgl* libEgl = LibEgl::GetInstance();
     LibGl2* libGl2 = LibGl2::GetInstance();
 
@@ -38,6 +42,11 @@ RenderManager::~RenderManager()
     if (programObjectTextRender) {
         libGl2->glDeleteProgram(programObjectTextRender);
     }
+
+    if(dint_window) {
+    	libDisplayInit->dint_destroy_window(dint_window);
+    }
+    libDisplayInit->dint_deinit();
 }
 
 void RenderManager::init()
@@ -123,7 +132,7 @@ void RenderManager::createGlPrograms()
 {
     LibGl2* libGl2 = LibGl2::GetInstance();
 
-    // 1. Создание и компиляция вершинного шейдера
+    // 1. РЎРѕР·РґР°РЅРёРµ Рё РєРѕРјРїРёР»СЏС†РёСЏ РІРµСЂС€РёРЅРЅРѕРіРѕ С€РµР№РґРµСЂР°
     const char* vertexShaderSourceText =
         "attribute vec2 position;\n"
         "void main()\n"
@@ -136,7 +145,7 @@ void RenderManager::createGlPrograms()
     libGl2->glShaderSource(vertexShaderTextRender, 1, &vertexShaderSourceText, NULL);
     libGl2->glCompileShader(vertexShaderTextRender);
 
-    // Проверка компиляции вершинного шейдера
+    // РџСЂРѕРІРµСЂРєР° РєРѕРјРїРёР»СЏС†РёРё РІРµСЂС€РёРЅРЅРѕРіРѕ С€РµР№РґРµСЂР°
     GLint vertexShaderCompileStatus;
     libGl2->glGetShaderiv(vertexShaderTextRender, GL_COMPILE_STATUS, &vertexShaderCompileStatus);
     if (vertexShaderCompileStatus != GL_TRUE) {
@@ -147,7 +156,7 @@ void RenderManager::createGlPrograms()
         throw std::runtime_error("Vertex shader compilation failed");
     }
 
-    // 2. Создание и компиляция фрагментного шейдера
+    // 2. РЎРѕР·РґР°РЅРёРµ Рё РєРѕРјРїРёР»СЏС†РёСЏ С„СЂР°РіРјРµРЅС‚РЅРѕРіРѕ С€РµР№РґРµСЂР°
     const char* fragmentShaderSourceText =
         "precision mediump float;\n"
         "uniform vec3 textColor;\n"
@@ -160,7 +169,7 @@ void RenderManager::createGlPrograms()
     libGl2->glShaderSource(fragmentShaderTextRender, 1, &fragmentShaderSourceText, NULL);
     libGl2->glCompileShader(fragmentShaderTextRender);
 
-    // Проверка компиляции фрагментного шейдера
+    // РџСЂРѕРІРµСЂРєР° РєРѕРјРїРёР»СЏС†РёРё С„СЂР°РіРјРµРЅС‚РЅРѕРіРѕ С€РµР№РґРµСЂР°
     GLint fragmentShaderCompileStatus;
     libGl2->glGetShaderiv(fragmentShaderTextRender, GL_COMPILE_STATUS, &fragmentShaderCompileStatus);
     if (fragmentShaderCompileStatus != GL_TRUE) {
@@ -172,13 +181,13 @@ void RenderManager::createGlPrograms()
         throw std::runtime_error("Fragment shader compilation failed");
     }
 
-    // 3. Создание шейдерной программы
+    // 3. РЎРѕР·РґР°РЅРёРµ С€РµР№РґРµСЂРЅРѕР№ РїСЂРѕРіСЂР°РјРјС‹
     this->programObjectTextRender = libGl2->glCreateProgram();
     libGl2->glAttachShader(this->programObjectTextRender, vertexShaderTextRender);
     libGl2->glAttachShader(this->programObjectTextRender, fragmentShaderTextRender);
     libGl2->glLinkProgram(this->programObjectTextRender);
 
-    // 4. Проверка линковки программы
+    // 4. РџСЂРѕРІРµСЂРєР° Р»РёРЅРєРѕРІРєРё РїСЂРѕРіСЂР°РјРјС‹
     GLint programLinkStatus;
     libGl2->glGetProgramiv(this->programObjectTextRender, GL_LINK_STATUS, &programLinkStatus);
     if (programLinkStatus != GL_TRUE) {
@@ -191,7 +200,7 @@ void RenderManager::createGlPrograms()
         throw std::runtime_error("Program linking failed");
     }
 
-    // 5. Проверка атрибутов и юниформов
+    // 5. РџСЂРѕРІРµСЂРєР° Р°С‚СЂРёР±СѓС‚РѕРІ Рё СЋРЅРёС„РѕСЂРјРѕРІ
     GLint positionLoc = libGl2->glGetAttribLocation(this->programObjectTextRender, "position");
     if (positionLoc == -1) {
         printf("WARNING: 'position' attribute not found in shader program\n");
@@ -202,87 +211,66 @@ void RenderManager::createGlPrograms()
         printf("WARNING: 'textColor' uniform not found in shader program\n");
     }
 
-    // 6. Удаление шейдеров (они больше не нужны)
+    // 6. РЈРґР°Р»РµРЅРёРµ С€РµР№РґРµСЂРѕРІ (РѕРЅРё Р±РѕР»СЊС€Рµ РЅРµ РЅСѓР¶РЅС‹)
     libGl2->glDeleteShader(vertexShaderTextRender);
     libGl2->glDeleteShader(fragmentShaderTextRender);
+
+    printf("glEnable start\n");
+    libGl2->glEnable(GL_BLEND);
+    printf("glBlendFunc start\n");
+    libGl2->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    printf("glDisable start\n");
+    libGl2->glDisable(GL_DEPTH_TEST);  // Р”Р»СЏ 2D-СЂРµРЅРґРµСЂРёРЅРіР°
+
+    printf("InitFont start\n");
+    if (!InitFont(&font, "/mnt/app/navigation/assets/olympia/olymp1/font/AudiTypeDisplayHigh-Normal.ttf", 24.0f)) {
+        printf("ERROR: InitFont()!\n");
+    }
+    font.windowWidth = this->width;
+    font.windowHeight = this->height;
 }
 
 void RenderManager::printString(float x, float y, const char* text, float r, float g, float b, float size) {
+    if (!text || strlen(text) == 0) return;
+
     LibGl2* libGl2 = LibGl2::GetInstance();
 
-    // 1. Проверка входных данных
-    if (!text || strlen(text) == 0) {
-        printf("WARNING: Empty text string\n");
-        return;
-    }
+    char inputBuffer[2000] = { 0 }; // ~500 chars
+    GLfloat triangleBuffer[2000] = { 0 };
+    int number = stb_easy_font_print(0, 0, text, NULL, inputBuffer, sizeof(inputBuffer));
 
-    // 2. Генерация геометрии текста
-    const int MAX_BUFFER_SIZE = 2000;
-    char inputBuffer[MAX_BUFFER_SIZE] = { 0 };
-    GLfloat triangleBuffer[MAX_BUFFER_SIZE] = { 0 };
+    // calculate movement inside viewport
+    float ndcMovementX = (2.0f * x) / this->width;
+    float ndcMovementY = (2.0f * y) / this->height;
 
-    int numChars = stb_easy_font_print(0, 0, text, NULL, inputBuffer, sizeof(inputBuffer));
-    if (numChars <= 0) {
-        printf("WARNING: No characters generated\n");
-        return;
-    }
-
-    // 3. Преобразование координат в NDC
-    float scaleX = (2.0f * size / 10.0f) / width;   // Масштабирование с учетом размера
-    float scaleY = (2.0f * size / 10.0f) / height;
-    float offsetX = (2.0f * x / 100.0f) / width;    // Нормализация смещения
-    float offsetY = (2.0f * y / 100.0f) / height;
-
-    // 4. Преобразование квадов в треугольники
     int triangleIndex = 0;
-    const int MAX_VERTICES = MAX_BUFFER_SIZE / sizeof(GLfloat);
+    for (int i = 0; i < sizeof(inputBuffer) / sizeof(GLfloat); i += 8) {
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[i * sizeof(GLfloat)]) / size + ndcMovementX;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 1) * sizeof(GLfloat)]) / size * -1 + ndcMovementY;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 2) * sizeof(GLfloat)]) / size + +ndcMovementX;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 3) * sizeof(GLfloat)]) / size * -1 + ndcMovementY;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 4) * sizeof(GLfloat)]) / size + ndcMovementX;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 5) * sizeof(GLfloat)]) / size * -1 + ndcMovementY;
 
-    for (int i = 0; i < numChars * 8 && triangleIndex < MAX_VERTICES - 12; i += 8) {
-        // Первый треугольник
-        triangleBuffer[triangleIndex++] = inputBuffer[i] * scaleX + offsetX;
-        triangleBuffer[triangleIndex++] = -(inputBuffer[i+1] * scaleY + offsetY);
-
-        triangleBuffer[triangleIndex++] = inputBuffer[i+2] * scaleX + offsetX;
-        triangleBuffer[triangleIndex++] = -(inputBuffer[i+3] * scaleY + offsetY);
-
-        triangleBuffer[triangleIndex++] = inputBuffer[i+4] * scaleX + offsetX;
-        triangleBuffer[triangleIndex++] = -(inputBuffer[i+5] * scaleY + offsetY);
-
-        // Второй треугольник
-        triangleBuffer[triangleIndex++] = inputBuffer[i] * scaleX + offsetX;
-        triangleBuffer[triangleIndex++] = -(inputBuffer[i+1] * scaleY + offsetY);
-
-        triangleBuffer[triangleIndex++] = inputBuffer[i+4] * scaleX + offsetX;
-        triangleBuffer[triangleIndex++] = -(inputBuffer[i+5] * scaleY + offsetY);
-
-        triangleBuffer[triangleIndex++] = inputBuffer[i+6] * scaleX + offsetX;
-        triangleBuffer[triangleIndex++] = -(inputBuffer[i+7] * scaleY + offsetY);
+        //// Triangle 2
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[i * sizeof(GLfloat)]) / size + ndcMovementX;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 1) * sizeof(GLfloat)]) / size * -1 + ndcMovementY;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 4) * sizeof(GLfloat)]) / size + ndcMovementX;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 5) * sizeof(GLfloat)]) / size * -1 + ndcMovementY;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 6) * sizeof(GLfloat)]) / size + ndcMovementX;
+        triangleBuffer[triangleIndex++] = *reinterpret_cast<GLfloat*>(&inputBuffer[(i + 7) * sizeof(GLfloat)]) / size * -1 + ndcMovementY;
     }
 
-    // 5. Проверка, что есть что рисовать
-    if (triangleIndex == 0) {
-        printf("WARNING: No vertices generated\n");
-        return;
-    }
-
-    // 6. Настройка шейдера
     libGl2->glUseProgram(this->programObjectTextRender);
 
-    // Установка цвета текста
     GLint colorLoc = libGl2->glGetUniformLocation(this->programObjectTextRender, "textColor");
-    if (colorLoc != -1) {
-        libGl2->glUniform3f(colorLoc, r, g, b);
-    } else {
-        printf("WARNING: 'textColor' uniform not found\n");
-    }
+    if (colorLoc != -1) libGl2->glUniform3f(colorLoc, r, g, b);
 
-    // 7. Создание и настройка VBO
     GLuint vbo;
     libGl2->glGenBuffers(1, &vbo);
     libGl2->glBindBuffer(GL_ARRAY_BUFFER, vbo);
     libGl2->glBufferData(GL_ARRAY_BUFFER, triangleIndex * sizeof(GLfloat), triangleBuffer, GL_STATIC_DRAW);
 
-    // 8. Настройка атрибута position
     GLint positionLoc = libGl2->glGetAttribLocation(this->programObjectTextRender, "position");
     if (positionLoc == -1) {
         printf("ERROR: 'position' attribute not found\n");
@@ -293,18 +281,20 @@ void RenderManager::printString(float x, float y, const char* text, float r, flo
     libGl2->glEnableVertexAttribArray(positionLoc);
     libGl2->glVertexAttribPointer(positionLoc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // 9. Отрисовка
-    libGl2->glDrawArrays(GL_TRIANGLES, 0, triangleIndex / 2); // 2 компоненты на вершину
+    libGl2->glDrawArrays(GL_TRIANGLES, 0, triangleIndex / 2); // РїРѕ 2 float РЅР° РІРµСЂС€РёРЅСѓ
 
-    // 10. Очистка
     libGl2->glDisableVertexAttribArray(positionLoc);
     libGl2->glDeleteBuffers(1, &vbo);
+}
 
-    // Проверка ошибок OpenGL
-    GLenum err = libGl2->glGetError();
-    if (err != GL_NO_ERROR) {
-        printf("OpenGL error during text rendering: 0x%x\n", err);
-    }
+void RenderManager::addRender(IRender* render)
+{
+	if(!render) {
+		printf("Warning: render is null\n");
+		return;
+	}
+	render->setManager(this);
+	this->renders.push_back(render);
 }
 
 void RenderManager::render()
@@ -312,8 +302,51 @@ void RenderManager::render()
 	LibGl2* libGl2 = LibGl2::GetInstance();
 	LibEgl* libEgl = LibEgl::GetInstance();
 
-	libGl2->glClearColor(0.0, 1.0, 0.0, 1.0); // Зелёный фон
+	libGl2->glViewport(0, 0, this->width, this->height);
 	libGl2->glClear(GL_COLOR_BUFFER_BIT);
-	this->printString(0, 0, "Q3 F3 Team OpenGL", 1.0, 0.0, 0.0, 40.0); // Красный текст в центре
+
+	for(size_t i = 0; i < this->renders.size(); ++i)
+	{
+		if(!renders[i]) {
+			printf("Warning: renders[%d] is null\n", i);
+			continue;
+		}
+		try {
+			renders[i]->render();
+		}
+		catch(...) {
+			printf("Error occurred while call renders[%d]->render()\n", i);
+		}
+	}
+
 	libEgl->eglSwapBuffers(this->eglDisplay, this->eglSurface);
+}
+
+void RenderManager::render(const std::wstring& renderStr)
+{
+	printf("Render with wstring start\n");
+	char* utf8 = wstring_to_utf8_cstr(renderStr);
+	printf("wstring_to_utf8_cstr ok \n");
+
+	this->render(utf8);
+
+	if(utf8) {
+		free(utf8);
+	}
+	printf("Render with wstring done\n");
+}
+
+void RenderManager::render(const char* renderStr)
+{
+	printf("Render with char* start\n");
+	LibGl2* libGl2 = LibGl2::GetInstance();
+	LibEgl* libEgl = LibEgl::GetInstance();
+
+	libGl2->glViewport(0, 0, this->width, this->height);
+	//libGl2->glClearColor(0.0, 1.0, 0.0, 1.0); // Р—РµР»С‘РЅС‹Р№ С„РѕРЅ
+	libGl2->glClear(GL_COLOR_BUFFER_BIT);
+	//printString(-300, 100, "Q3 F3 Team OpenGL", 1.0, 0.0, 0.0, 200.0);
+	RenderText(&font, renderStr, 50, 150, 1.0f, 1.0f, 1.0f);
+	libEgl->eglSwapBuffers(this->eglDisplay, this->eglSurface);
+	printf("Render with char* ok\n");
 }

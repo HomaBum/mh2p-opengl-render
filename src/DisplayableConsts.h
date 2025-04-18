@@ -1,0 +1,121 @@
+#ifndef DISPLAYABLECONSTS_H
+#define DISPLAYABLECONSTS_H
+
+enum class Displayable {
+    INVALID = -1,
+    RESERVED = 15,
+    HMI = 16,
+    REAR_VIEW_CAM = 17,
+    BROWSER = 18,
+    MAPVIEWER = 19,
+    MAP_ROUTE_GUIDANCE = 20,
+    MAP_INTERSECTION_VIEW = 21,
+    MAP_3D_INTERSECTION_VIEW = 22,
+    MAP_JUNCTION_VIEW = 23,
+    MAP_LANDMARK_VIEW = 24,
+    DVD_VIDEO = 25,
+    TV_TUNER = 26,
+    AMI = 27,
+    OPS = 28,
+    TV_AUX1 = 29,
+    TV_AUX2 = 30,
+    TV_VIDEOTEXT = 31,
+    SIDE_VIEW_CAM = 32,
+    KOMBI_MAP_VIEW = 33,
+    EXTERNAL_DVD_VIDEO = 34,
+    COVERFLOW = 35,
+    HMI2 = 36,
+    FILE_VIDEO = 37,
+    COVERFLOW2 = 38,
+    GOOGLE_EARTH = 39,
+    PUBLIC_SPLASHSCREEN = 40,
+    _3D = 41,
+    DIGITAL_VIDEOPLAYER_1 = 43,
+    DIGITAL_VIDEOPLAYER_2 = 44,
+    REMOTE_HMI = 45,
+    JAPANMAP = 46,
+    FBAS_1 = 47,
+    FBAS_2 = 48,
+    FBAS_3 = 49,
+    MAP_IN_MAP = 50,
+    STREETVIEW = 51,
+    CRUISING_RANGE = 52,
+    TRAFFIC_INFORMATION = 53,
+    REALISTIC_PICTURE = 54,
+    KANBAN = 55,
+    MIRRORLINK = 56,
+    SFA = 57,
+    GOOGLE_EARTH_KOMBI_MAP_VIEW = 58,
+    EXTERNAL_SMARTPHONE = 59,
+    HUD_MAP_VIEW = 60,
+    HMI_CLUSTER_SUBFRAME = 61,
+    HAPTIC_MAIN = 98,
+    HAPTIC_LOWER = 99,
+    DIGITAL_VIDEOPLAYER_UNDEFINED = 100,
+    DIGITAL_VIDEOPLAYER_3 = 101,
+    DIGITAL_VIDEOPLAYER_4 = 102,
+    MAP_3D_INTERSECTION_VIEW_KOMBI = 103,
+    MAP_JUNCTION_VIEW_KOMBI = 104
+};
+
+enum class DisplayState {
+    UNKNOWN = -1,
+    OFF = 0,
+    ON = 1
+};
+
+enum class DisplayId {
+    PRIMARY_DEFAULT = 0,
+    SECONDARY = 1,
+    RSE_LEFT = 2,
+    RSE_RIGHT = 3,
+    CLUSTER = 4,
+    HUD = 5,
+    LOWER = 6,
+    CLUSTER_VIRTUAL1 = 7
+};
+
+enum class DisplayType {
+    UNDEFINED = 0,
+    LVDS = 1,
+    H264_MOST = 2
+};
+
+enum class ResultCode {
+    OK = 0,
+    NOT_OPERABLE = 1,
+    ERROR = 2,
+    NOT_SUPPORTED = 3,
+    INVALID_RANGE = 4,
+    PATH_INACCESSIBLE = 5
+};
+
+enum class DisplayableInfo {
+    NOT_SUPPORTED = 0,
+    SUPPORTED_VIDEO_PARAMETRIZABLE = 1,
+    SUPPORTED_VIDEO_NOT_PARAMETRIZABLE = 2
+};
+
+enum class ScaleMode {
+    ASPECT_RATIO = 0,
+    FIT_HORIZONTAL = 1,
+    FIT_VERTICAL = 2,
+    CLIP_TOP_LEFT = 3,
+    CLIP_MIDDLE = 4
+};
+
+enum class ScreenshotResultCode {
+    OK = 0,
+    NO_MEDIUM = 1,
+    ERROR = 2
+};
+
+enum class ShowDisplayablesResult {
+    OK = 0,
+    ERROR_UNSUPPORTED_DISPLAYABLE = 1,
+    ERROR_DISPLAYABLE_NOT_READY = 2,
+    ERROR_UNSUPPORTED_DISPLAYABLE_COMBINATION = 3,
+    ERROR_OTHER = 4
+};
+
+#endif
